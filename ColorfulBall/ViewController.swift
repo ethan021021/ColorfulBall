@@ -14,6 +14,8 @@ import RxCocoa
 class ViewController: UIViewController {
 
     var circleView: UIView!
+    var circleViewModel: CircleViewModel!
+    var disposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,7 +35,22 @@ class ViewController: UIViewController {
 
         circleView
             .rx_observe(CGPoint.self, "center")
-            .bindTo(CircleViewModel.centerVariable)
+            .bindTo(circleViewModel.centerVariable)
+            .addDisposableTo(disposeBag)
+
+        circleViewModel.backgroundColorObservable
+            .subscribeNext { (backgroundColor) in
+                UIView.animateWithDuration(0.1) {
+                    self.circleView.backgroundColor = backgroundColor
+
+                    let viewBackgroundColor = UIColor.init(complementaryFlatColorOf: backgroundColor, withAlpha: 1.0)
+
+                    if viewBackgroundColor != backgroundColor {
+                        self.view.backgroundColor = viewBackgroundColor
+                    }
+                }
+        }
+        .addDisposableTo(disposeBag)
 
         // Add gesture recognizer
         let gestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(self.circleMoved(_:)))
